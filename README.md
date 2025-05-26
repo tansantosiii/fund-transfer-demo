@@ -1,6 +1,6 @@
 # Fund Transfer Service
 
-## Demo project for coding assessment
+## Demo project
 
 ## Technologies
 - Java 21
