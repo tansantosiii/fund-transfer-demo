@@ -25,6 +25,8 @@ public class FundTransferServiceImpl implements FundTransferService {
 
     private final FundTransferRepository fundTransferRepository;
 
+    private final Object objLock = new Object();
+
     public FundTransferServiceImpl(AccountService accountService, FundTransferRepository fundTransferRepository) {
         this.accountService = accountService;
         this.fundTransferRepository = fundTransferRepository;
@@ -40,8 +42,10 @@ public class FundTransferServiceImpl implements FundTransferService {
         }
 
         try {
-            doDebit(request);
-            doCredit(request);
+            synchronized(objLock) {
+                doDebit(request);
+                doCredit(request);
+            }
         } catch (AccountException | CurrencyConversionException | FundTransferException | DatabaseException e) {
             return apiResponseAndLog(request, e.getResultCodeEnum());
         } catch (Exception e) {
@@ -53,7 +57,7 @@ public class FundTransferServiceImpl implements FundTransferService {
     }
 
     // Add money to target account
-    private synchronized void doCredit(FundTransferRequest request) throws Exception {
+    private void doCredit(FundTransferRequest request) throws Exception {
         log.info("doCredit -> Updating target account balance...");
 
         try {
@@ -83,7 +87,7 @@ public class FundTransferServiceImpl implements FundTransferService {
     }
 
     // Deduct money from source account
-    private synchronized void doDebit(FundTransferRequest request) throws Exception {
+    private void doDebit(FundTransferRequest request) throws Exception {
         log.info("doDebit -> Updating source account balance...");
 
         try {
