@@ -6,13 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.io.Serializable;
-
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-public class ApiResponse<T> implements Serializable {
+public class ApiResponse<T> {
 
     private T data;
 

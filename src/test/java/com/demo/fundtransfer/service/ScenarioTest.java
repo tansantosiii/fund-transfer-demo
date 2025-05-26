@@ -18,11 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ScenarioTest {
+class ScenarioTest {
 
     @Mock
     private FundTransferRepository fundTransferRepository;
@@ -54,7 +55,7 @@ public class ScenarioTest {
 
         ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
 
-        assertNotNull(apiResponse.getResult().isSuccess());
+        assertTrue(apiResponse.getResult().isSuccess());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
     }
@@ -74,7 +75,7 @@ public class ScenarioTest {
         ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
         System.out.println("Result Code: " + apiResponse.getResult().getCode());
 
-        assertNotNull(apiResponse.getResult() != null);
+        assertNotNull(apiResponse.getResult());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
     }
@@ -124,7 +125,7 @@ public class ScenarioTest {
 
         ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
 
-        assertNotNull(apiResponse.getResult().isSuccess());
+        assertNotNull(apiResponse.getResult());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
     }
