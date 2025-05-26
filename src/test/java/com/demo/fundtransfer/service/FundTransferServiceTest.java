@@ -30,8 +30,8 @@ class FundTransferServiceTest {
 
     private FundTransferService fundTransferService;
 
-    private static Account usdAccount = new Account(1L, "Alice", BigDecimal.valueOf(1000), CurrencyCodeEnum.USD);
-    private static Account audAccount = new Account(2L, "Bob", BigDecimal.valueOf(500), CurrencyCodeEnum.AUD);
+    private static final Account usdAccount = new Account(1L, "Alice", BigDecimal.valueOf(1000), CurrencyCodeEnum.USD);
+    private static final Account audAccount = new Account(2L, "Bob", BigDecimal.valueOf(500), CurrencyCodeEnum.AUD);
 
     @BeforeEach
     void mock() {

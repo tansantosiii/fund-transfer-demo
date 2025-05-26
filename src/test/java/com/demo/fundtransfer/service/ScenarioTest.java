@@ -33,20 +33,20 @@ class ScenarioTest {
 
     private FundTransferService fundTransferService;
 
-    private static Account usdAccount = new Account(1L, "Alice", BigDecimal.valueOf(1000), CurrencyCodeEnum.USD);
-    private static Account audAccount = new Account(2L, "Bob", BigDecimal.valueOf(500), CurrencyCodeEnum.AUD);
+    private static final Account usdAccount = new Account(1L, "Alice", BigDecimal.valueOf(1000), CurrencyCodeEnum.USD);
+    private static final Account audAccount = new Account(2L, "Bob", BigDecimal.valueOf(500), CurrencyCodeEnum.AUD);
 
     @BeforeEach
     void mock() {
         fundTransferService = new FundTransferServiceImpl(accountService, fundTransferRepository);
+
+        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
+        when(accountService.findByIdAndLock(2L)).thenReturn(audAccount);
     }
 
     @Test
     void transfer_Scenario1() {
         // Transfer USD 50 from Alice to Bob
-        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
-        when(accountService.findByIdAndLock(2L)).thenReturn(audAccount);
-
         FundTransferRequest request = new FundTransferRequest();
         request.setSourceAccount(usdAccount.getId());
         request.setTargetAccount(audAccount.getId());
@@ -63,9 +63,6 @@ class ScenarioTest {
     @RepeatedTest(20)
     void transfer_Scenario2() {
         // Transfer AUD 50 from Bob to Alice recurring for 20 times
-        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
-        when(accountService.findByIdAndLock(2L)).thenReturn(audAccount);
-
         FundTransferRequest request = new FundTransferRequest();
         request.setSourceAccount(audAccount.getId());
         request.setTargetAccount(usdAccount.getId());
@@ -82,9 +79,6 @@ class ScenarioTest {
 
     @Execution(ExecutionMode.CONCURRENT)
     void transfer_Scenario3() {
-        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
-        when(accountService.findByIdAndLock(2L)).thenReturn(audAccount);
-
         // Transfer AUD 20 from Bob to Alice
         FundTransferRequest request1 = new FundTransferRequest();
         request1.setSourceAccount(audAccount.getId());
@@ -114,9 +108,6 @@ class ScenarioTest {
     @Test
     void transfer_Scenario4() {
         // Transfer AUD 40 from Alice to Bob
-        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
-        when(accountService.findByIdAndLock(2L)).thenReturn(audAccount);
-
         FundTransferRequest request = new FundTransferRequest();
         request.setSourceAccount(usdAccount.getId());
         request.setTargetAccount(audAccount.getId());
