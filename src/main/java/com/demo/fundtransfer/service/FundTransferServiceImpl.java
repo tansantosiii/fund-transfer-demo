@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,15 +25,12 @@ public class FundTransferServiceImpl implements FundTransferService {
 
     private final FundTransferRepository fundTransferRepository;
 
-    private static final String SOURCE = "SOURCE";
-    private static final String TARGET = "TARGET";
-
     public FundTransferServiceImpl(AccountService accountService, FundTransferRepository fundTransferRepository) {
         this.accountService = accountService;
         this.fundTransferRepository = fundTransferRepository;
     }
 
-    @Transactional
+    @Transactional(timeout = 5)
     @Override
     public ApiResponse<FundTransfer> transfer(FundTransferRequest request) {
         log.info("Init Fund Transfer");
@@ -45,11 +40,8 @@ public class FundTransferServiceImpl implements FundTransferService {
         }
 
         try {
-            Map<String, Account> sourceTargetAccountMap
-                    = fetchAndLockSourceTargetAccount(request.getSourceAccount(), request.getTargetAccount());
-
-            doDebit(sourceTargetAccountMap.get(SOURCE), request);
-            doCredit(sourceTargetAccountMap.get(TARGET), request);
+            doDebit(request);
+            doCredit(request);
         } catch (AccountException | CurrencyConversionException | FundTransferException | DatabaseException e) {
             return apiResponseAndLog(request, e.getResultCodeEnum());
         } catch (Exception e) {
@@ -60,37 +52,14 @@ public class FundTransferServiceImpl implements FundTransferService {
         return apiResponseAndLog(request, ResultCodeEnum.SUCCESS);
     }
 
-    private Map<String, Account> fetchAndLockSourceTargetAccount(Long sourceAccountId, Long targetAccountId) throws Exception {
-        log.info("fetchAndLockSourceTargetAccount => sourceAccountId = {}, targetAccountId = {}", sourceAccountId, targetAccountId);
-        // Pessimistic locking on fetch to modify data safely during concurrency
-        Map<String, Account> sourceTargetAccountMap = new HashMap<>();
-
-        try {
-            Account sourceAccount = accountService.findByIdAndLock(sourceAccountId);
-            log.info("Source Account Find By ID and Lock = {}", sourceAccount);
-            sourceTargetAccountMap.put(SOURCE, sourceAccount);
-        } catch (EntityNotFoundException e) {
-            throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
-        }
-        log.info("Source Account Find By ID and Lock Success");
-
-        try {
-            Account targetAccount = accountService.findByIdAndLock(targetAccountId);
-            log.info("Target Account Find By ID and Lock = {}", targetAccount);
-            sourceTargetAccountMap.put(TARGET, targetAccount);
-        } catch (EntityNotFoundException e) {
-            throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
-        }
-        log.info("Target Account Find By ID and Lock Success");
-
-        return sourceTargetAccountMap;
-    }
-
     // Add money to target account
-    private synchronized void doCredit(Account targetAccount, FundTransferRequest request) throws Exception {
-        log.info("doCredit -> Updating target account balance... {}", targetAccount);
+    private synchronized void doCredit(FundTransferRequest request) throws Exception {
+        log.info("doCredit -> Updating target account balance...");
 
         try {
+            Account targetAccount = accountService.findByIdAndLock(request.getTargetAccount());
+            log.info("Target Account Find By ID and Lock Success");
+
             BigDecimal convertedAmount = request.getAmount();
 
             if (!request.getCurrencyCodeEnum().equals(targetAccount.getCurrencyCode())) {
@@ -104,6 +73,8 @@ public class FundTransferServiceImpl implements FundTransferService {
 
             // Save Target Account
             accountService.save(targetAccount);
+        } catch (EntityNotFoundException e) {
+            throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
         } catch (CurrencyConversionException e) {
             throw new CurrencyConversionException(e.getResultCodeEnum());
         } catch (DatabaseException e) {
@@ -112,10 +83,13 @@ public class FundTransferServiceImpl implements FundTransferService {
     }
 
     // Deduct money from source account
-    private synchronized void doDebit(Account sourceAccount, FundTransferRequest request) throws Exception {
-        log.info("doDebit -> Updating source account balance... {}", sourceAccount);
+    private synchronized void doDebit(FundTransferRequest request) throws Exception {
+        log.info("doDebit -> Updating source account balance...");
 
         try {
+            Account sourceAccount = accountService.findByIdAndLock(request.getSourceAccount());
+            log.info("Source Account Find By ID and Lock Success");
+
             BigDecimal convertedAmount = request.getAmount();
 
             if (!request.getCurrencyCodeEnum().equals(sourceAccount.getCurrencyCode())) {
@@ -137,6 +111,8 @@ public class FundTransferServiceImpl implements FundTransferService {
 
             // Save Source Account
             accountService.save(sourceAccount);
+        } catch (EntityNotFoundException e) {
+            throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
         } catch (CurrencyConversionException e) {
             throw new CurrencyConversionException(e.getResultCodeEnum());
         } catch (DatabaseException e) {

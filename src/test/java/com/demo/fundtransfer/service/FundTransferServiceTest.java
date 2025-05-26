@@ -54,6 +54,8 @@ class FundTransferServiceTest {
         assertTrue(apiResponse.getResult().isSuccess());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(2)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
     @Test
@@ -67,6 +69,10 @@ class FundTransferServiceTest {
         BadRequestException ex = assertThrowsExactly(BadRequestException.class, () -> fundTransferService.transfer(request));
 
         assertEquals(ResultCodeEnum.INVALID_TRANSFER_DETAILS, ex.getResultCodeEnum());
+
+        verify(accountService, times(0)).findByIdAndLock(anyLong());
+        verify(accountService, times(0)).save(any());
+        verify(fundTransferRepository, times(0)).save(any());
     }
 
     @Test
@@ -83,7 +89,9 @@ class FundTransferServiceTest {
 
         assertEquals(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
 
-        verify(accountService).findByIdAndLock(anyLong());
+        verify(accountService, times(1)).findByIdAndLock(anyLong());
+        verify(accountService, times(0)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
     @Test
@@ -102,6 +110,8 @@ class FundTransferServiceTest {
         assertEquals(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(1)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
 }

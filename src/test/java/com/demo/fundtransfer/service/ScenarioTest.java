@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,10 +57,16 @@ class ScenarioTest {
         assertTrue(apiResponse.getResult().isSuccess());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(2)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
     @RepeatedTest(20)
     void transfer_Scenario2() {
+        // Source and Target Account balance are manipulated to prevent INSUFFICIENT_BALANCE error
+        usdAccount.setAmountBalance(BigDecimal.valueOf(10000));
+        audAccount.setAmountBalance(BigDecimal.valueOf(10000));
+
         // Transfer AUD 50 from Bob to Alice recurring for 20 times
         FundTransferRequest request = new FundTransferRequest();
         request.setSourceAccount(audAccount.getId());
@@ -75,9 +80,12 @@ class ScenarioTest {
         assertNotNull(apiResponse.getResult());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(2)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
     @Execution(ExecutionMode.CONCURRENT)
+    @Test
     void transfer_Scenario3() {
         // Transfer AUD 20 from Bob to Alice
         FundTransferRequest request1 = new FundTransferRequest();
@@ -102,7 +110,9 @@ class ScenarioTest {
         assertNotNull(apiResponse1.getResult());
         assertNotNull(apiResponse2.getResult());
 
-        verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(4)).findByIdAndLock(anyLong());
+        verify(accountService, times(4)).save(any());
+        verify(fundTransferRepository, times(2)).save(any());
     }
 
     @Test
@@ -119,6 +129,8 @@ class ScenarioTest {
         assertNotNull(apiResponse.getResult());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, times(2)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
     }
 
 }

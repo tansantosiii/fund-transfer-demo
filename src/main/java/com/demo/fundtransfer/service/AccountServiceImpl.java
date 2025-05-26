@@ -3,7 +3,6 @@ package com.demo.fundtransfer.service;
 import com.demo.fundtransfer.entity.Account;
 import com.demo.fundtransfer.enums.ResultCodeEnum;
 import com.demo.fundtransfer.exception.DatabaseException;
-import com.demo.fundtransfer.exception.UnhandledException;
 import com.demo.fundtransfer.repository.AccountRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +27,7 @@ public class AccountServiceImpl implements AccountService {
         log.info("AccountService => findByIdAndLock = " + id);
 
         try {
+            // Pessimistic locking on fetch to modify data safely during concurrency
             Optional<Account> optionalAccount = accountRepository.findByIdAndLock(id);
             return optionalAccount.orElseThrow(() -> new EntityNotFoundException("findByIdAndLock = " + id + " Not Found"));
         } catch (DataAccessException e) {
