@@ -2,6 +2,7 @@ package com.demo.fundtransfer.validator;
 
 import com.demo.fundtransfer.dto.FundTransferRequest;
 import com.demo.fundtransfer.enums.CurrencyCodeEnum;
+import io.micrometer.common.util.StringUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -15,22 +16,22 @@ public class TransferAmountValidator implements ConstraintValidator<MinTransferA
 
     @Override
     public boolean isValid(FundTransferRequest request, ConstraintValidatorContext context) {
-        if (null == request || null == request.getAmount() || null == request.getCurrencyCodeEnum()) {
-            return true;
-        }
+        boolean isValid = true;
 
-        boolean isValid =  switch (request.getCurrencyCodeEnum()) {
-            case CurrencyCodeEnum.USD -> request.getAmount().compareTo(MIN_TRANSFER_USD) >= 0;
-            case CurrencyCodeEnum.AUD -> request.getAmount().compareTo(MIN_TRANSFER_AUD) >= 0;
-        };
+        if (null != request && null != request.getAmount() && StringUtils.isNotBlank(request.getCurrencyCode())) {
+            isValid = switch (request.getCurrencyCodeEnum()) {
+                case CurrencyCodeEnum.USD -> request.getAmount().compareTo(MIN_TRANSFER_USD) >= 0;
+                case CurrencyCodeEnum.AUD -> request.getAmount().compareTo(MIN_TRANSFER_AUD) >= 0;
+            };
 
-        if (!isValid) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("Minimum transfer amount is "
-                    + request.getCurrencyCodeEnum() + " "
-                    + ((request.getCurrencyCodeEnum().equals(CurrencyCodeEnum.USD)) ? MIN_TRANSFER_USD : MIN_TRANSFER_AUD))
-                    .addPropertyNode("amount")
-                    .addConstraintViolation();
+            if (!isValid) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Minimum transfer amount is "
+                                + request.getCurrencyCodeEnum() + " "
+                                + ((request.getCurrencyCodeEnum().equals(CurrencyCodeEnum.USD)) ? MIN_TRANSFER_USD : MIN_TRANSFER_AUD))
+                        .addPropertyNode("amount")
+                        .addConstraintViolation();
+            }
         }
 
         return isValid;
