@@ -1,0 +1,2 @@
+INSERT INTO ACCOUNT(name, amount_balance, currency_code, created_at) VALUES('Alice', 1000.00, 'USD', NOW());
+INSERT INTO ACCOUNT(name, amount_balance, currency_code, created_at) VALUES('Bob', 500.00, 'AUD', NOW());
