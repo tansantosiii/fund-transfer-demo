@@ -1,6 +1,6 @@
 # Fund Transfer Service
 
-## Demo project
+## Demo project that solves concurrency issue of updating specific rows in database via pessimistic locking
 
 ## Technologies
 - Java 21
