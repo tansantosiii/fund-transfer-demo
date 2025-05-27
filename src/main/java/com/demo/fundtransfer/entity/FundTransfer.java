@@ -8,17 +8,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 
 @Entity
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-public class FundTransfer {
+public class FundTransfer extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,10 +35,6 @@ public class FundTransfer {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CurrencyCodeEnum currencyCode;
-
-    @CreationTimestamp
-    @Column(updatable = false)
-    private Timestamp createdAt;
 
     @JsonIgnore
     @Column(nullable = false, updatable = false)
