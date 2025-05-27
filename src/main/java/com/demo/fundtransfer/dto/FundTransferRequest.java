@@ -5,15 +5,11 @@ import com.demo.fundtransfer.validator.MinTransferAmount;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-@ToString
+@Data
 @MinTransferAmount
 public class FundTransferRequest {
 

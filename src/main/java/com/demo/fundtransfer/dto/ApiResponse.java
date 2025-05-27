@@ -1,15 +1,9 @@
 package com.demo.fundtransfer.dto;
 
 import com.demo.fundtransfer.enums.ResultCodeEnum;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
+@Data
 public class ApiResponse<T> {
 
     private T data;
