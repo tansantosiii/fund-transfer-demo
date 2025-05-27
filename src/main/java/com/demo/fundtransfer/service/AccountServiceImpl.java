@@ -31,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
             Optional<Account> optionalAccount = accountRepository.findByIdAndLock(id);
             return optionalAccount.orElseThrow(() -> new EntityNotFoundException("findByIdAndLock = " + id + " Not Found"));
         } catch (DataAccessException e) {
-            throw new DatabaseException(ResultCodeEnum.DATABASE_ERROR);
+            throw new DatabaseException(ResultCodeEnum.DATABASE_ERROR, e.getCause());
         }
     }
 
@@ -42,9 +42,9 @@ public class AccountServiceImpl implements AccountService {
         try {
             return accountRepository.save(account);
         } catch (DataIntegrityViolationException e) {
-            throw new DatabaseException(ResultCodeEnum.SAVE_ERROR);
+            throw new DatabaseException(ResultCodeEnum.SAVE_ERROR, e.getCause());
         } catch (DataAccessException e) {
-            throw new DatabaseException(ResultCodeEnum.DATABASE_ERROR);
+            throw new DatabaseException(ResultCodeEnum.DATABASE_ERROR, e.getCause());
         }
     }
 

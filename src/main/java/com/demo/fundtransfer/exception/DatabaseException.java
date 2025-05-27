@@ -9,8 +9,8 @@ public class DatabaseException extends DataAccessException implements ResultCode
 
     private final ResultCodeEnum resultCodeEnum;
 
-    public DatabaseException(ResultCodeEnum resultCodeEnum) {
-        super(resultCodeEnum.getMsg());
+    public DatabaseException(ResultCodeEnum resultCodeEnum, Throwable cause) {
+        super(resultCodeEnum.getMsg(), cause);
         this.resultCodeEnum = resultCodeEnum;
     }
 

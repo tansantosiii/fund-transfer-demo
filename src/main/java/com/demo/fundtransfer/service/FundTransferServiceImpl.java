@@ -12,6 +12,7 @@ import com.demo.fundtransfer.util.FundTransferUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +47,7 @@ public class FundTransferServiceImpl implements FundTransferService {
                 doDebit(request);
                 doCredit(request);
             }
-        } catch (AccountException | CurrencyConversionException | FundTransferException | DatabaseException e) {
+        } catch (AccountException | FundTransferException e) {
             return apiResponseAndLog(request, e.getResultCodeEnum());
         } catch (Exception e) {
             throw new UnhandledException("Unhandled Exception: " + e.getCause());
@@ -79,10 +80,8 @@ public class FundTransferServiceImpl implements FundTransferService {
             accountService.save(targetAccount);
         } catch (EntityNotFoundException e) {
             throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
-        } catch (CurrencyConversionException e) {
-            throw new CurrencyConversionException(e.getResultCodeEnum());
-        } catch (DatabaseException e) {
-            throw new FundTransferException(ResultCodeEnum.TARGET_BALANCE_UPDATE_FAILED);
+        } catch (CurrencyConversionException | DatabaseException e) {
+            throw new FundTransferException(e.getResultCodeEnum());
         }
     }
 
@@ -117,10 +116,8 @@ public class FundTransferServiceImpl implements FundTransferService {
             accountService.save(sourceAccount);
         } catch (EntityNotFoundException e) {
             throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
-        } catch (CurrencyConversionException e) {
-            throw new CurrencyConversionException(e.getResultCodeEnum());
-        } catch (DatabaseException e) {
-            throw new FundTransferException(ResultCodeEnum.SOURCE_BALANCE_UPDATE_FAILED);
+        } catch (CurrencyConversionException | DatabaseException e) {
+            throw new FundTransferException(e.getResultCodeEnum());
         }
     }
 
@@ -130,8 +127,10 @@ public class FundTransferServiceImpl implements FundTransferService {
             FundTransfer responseData = fundTransferRepository.save(FundTransferUtil.build(request, resultCodeEnum));
             log.info("Save Fund Transfer Success");
             return new ApiResponse<>(responseData, resultCodeEnum);
+        } catch (DataIntegrityViolationException e) {
+            throw new DatabaseException(ResultCodeEnum.SAVE_ERROR, e.getCause());
         } catch (DataAccessException e) {
-            throw new DatabaseException(ResultCodeEnum.SAVE_ERROR);
+            throw new DatabaseException(ResultCodeEnum.DATABASE_ERROR, e.getCause());
         }
     }
 
