@@ -1,11 +1,14 @@
-# Fund Transfer Service
+# Fund Transfer Demo
 
-## Demo project that solves concurrency issue of updating specific rows in database via pessimistic locking
+## Solves concurrency issue of updating specific rows in database via pessimistic locking with retry mechanism
 
 ## Technologies
 - Java 21
 - Spring Boot 3.5.0
 - Spring Data JPA
+- Spring Retry 2.0.12
+- Lombok 1.18.30
+- Mockito
 - Maven
 - H2 Database
 
@@ -30,9 +33,9 @@
 - Start/Rerun Application
 
 ## Start Application
-- Run ```mvn clean install -Dmaven.test.skip=true``` or ```mvn clean install```
+- Run ```mvn clean install```
 - Default port set to 8080 (Change port if needed)
-- Run FundtransferApplication (SpringBootApplication)
+- Run FundTransferApplication (SpringBootApplication)
 
 ---
 
@@ -47,4 +50,4 @@ curl --location 'http://localhost:8080/fund-transfer' \
     "currencyCode": "USD"
 }' 
 ```
-![postman.png](postman.png)"# fund-transfer-demo" 
+![postman.png](postman.png)

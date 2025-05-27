@@ -13,6 +13,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +29,16 @@ public class FundTransferServiceImpl implements FundTransferService {
 
     private final FundTransferRepository fundTransferRepository;
 
-    private final Object objLock = new Object();
-
     public FundTransferServiceImpl(AccountService accountService, FundTransferRepository fundTransferRepository) {
         this.accountService = accountService;
         this.fundTransferRepository = fundTransferRepository;
     }
 
+    @Retryable(
+            retryFor = {PessimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 300, multiplier = 2)
+    )
     @Transactional(timeout = 5)
     @Override
     public ApiResponse<FundTransfer> transfer(FundTransferRequest request) {
@@ -43,10 +49,8 @@ public class FundTransferServiceImpl implements FundTransferService {
         }
 
         try {
-            synchronized(objLock) {
-                doDebit(request);
-                doCredit(request);
-            }
+            doDebit(request);
+            doCredit(request);
         } catch (AccountException | FundTransferException e) {
             return apiResponseAndLog(request, e.getResultCodeEnum());
         } catch (Exception e) {
