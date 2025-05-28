@@ -80,14 +80,14 @@ class FundTransferServiceTest {
         when(accountService.findByIdAndLock(1L)).thenThrow(new EntityNotFoundException("Not Found"));
 
         FundTransferRequest request = new FundTransferRequest();
-        request.setSourceAccount(1L); // Invalid Source Account
+        request.setSourceAccount(1L);
         request.setTargetAccount(2L);
         request.setAmount(BigDecimal.TEN);
         request.setCurrencyCode(CurrencyCodeEnum.USD.name());
 
         ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
 
-        assertEquals(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
+        assertEquals(ResultCodeEnum.ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
 
         verify(accountService, times(1)).findByIdAndLock(anyLong());
         verify(accountService, times(0)).save(any());
@@ -95,21 +95,62 @@ class FundTransferServiceTest {
     }
 
     @Test
-    void transfer_TargetAccountNotFound() {
+    void transfer_SourceAccountNotFound_Invert() {
         when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
-        when(accountService.findByIdAndLock(3L)).thenThrow(new EntityNotFoundException("Not Found"));
+        when(accountService.findByIdAndLock(2L)).thenThrow(new EntityNotFoundException("Not Found"));
 
+        // Invert source and target id due to ascending order locking strategy
         FundTransferRequest request = new FundTransferRequest();
-        request.setSourceAccount(1L);
-        request.setTargetAccount(3L); // Invalid Target Account
+        request.setSourceAccount(2L);
+        request.setTargetAccount(1L);
         request.setAmount(BigDecimal.TEN);
         request.setCurrencyCode(CurrencyCodeEnum.USD.name());
 
         ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
 
-        assertEquals(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
+        assertEquals(ResultCodeEnum.ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
 
-        verify(accountService, times(2)).findByIdAndLock(anyLong());
+        verify(accountService, atLeastOnce()).findByIdAndLock(anyLong());
+        verify(accountService, times(0)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
+    }
+
+    @Test
+    void transfer_TargetAccountNotFound() {
+        when(accountService.findByIdAndLock(1L)).thenReturn(usdAccount);
+        when(accountService.findByIdAndLock(2L)).thenThrow(new EntityNotFoundException("Not Found"));
+
+        FundTransferRequest request = new FundTransferRequest();
+        request.setSourceAccount(1L);
+        request.setTargetAccount(2L);
+        request.setAmount(BigDecimal.TEN);
+        request.setCurrencyCode(CurrencyCodeEnum.USD.name());
+
+        ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
+
+        assertEquals(ResultCodeEnum.ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
+
+        verify(accountService, atLeastOnce()).findByIdAndLock(anyLong());
+        verify(accountService, times(0)).save(any());
+        verify(fundTransferRepository, times(1)).save(any());
+    }
+
+    @Test
+    void transfer_TargetAccountNotFound_Invert() {
+        when(accountService.findByIdAndLock(1L)).thenThrow(new EntityNotFoundException("Not Found"));
+
+        // Invert source and target id due to ascending order locking strategy
+        FundTransferRequest request = new FundTransferRequest();
+        request.setSourceAccount(2L);
+        request.setTargetAccount(1L);
+        request.setAmount(BigDecimal.TEN);
+        request.setCurrencyCode(CurrencyCodeEnum.USD.name());
+
+        ApiResponse<FundTransfer> apiResponse = fundTransferService.transfer(request);
+
+        assertEquals(ResultCodeEnum.ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
+
+        verify(accountService, atLeastOnce()).findByIdAndLock(anyLong());
         verify(accountService, times(0)).save(any());
         verify(fundTransferRepository, times(1)).save(any());
     }

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 @Slf4j
 @Service
@@ -61,31 +62,30 @@ public class FundTransferServiceImpl implements FundTransferService {
     }
 
     public void doTransfer(FundTransferRequest request) {
+        log.info("doTransfer -> sourceAccountId = {}, targetAccountId = {}", request.getSourceAccount(), request.getTargetAccount());
+
         // Ordered locking to prevent deadlocks
         Long firstId = Math.min(request.getSourceAccount(), request.getTargetAccount());
         Long secondId = Math.max(request.getSourceAccount(), request.getTargetAccount());
 
-        Account firstAccount = null;
-        Account secondAccount = null;
-
         try {
-            firstAccount = accountService.findByIdAndLock(firstId);
-            secondAccount = accountService.findByIdAndLock(secondId);
+            Account firstAccount = accountService.findByIdAndLock(firstId);
+            Account secondAccount = accountService.findByIdAndLock(secondId);
+
+            log.info("Lock Acquired By ID Order {}", Arrays.asList(firstId, secondId));
+
+            boolean isFirstIdSource = firstId.equals(request.getSourceAccount());
+
+            // Identify source and target accounts
+            Account sourceAccount = isFirstIdSource ? firstAccount : secondAccount;
+            Account targetAccount = isFirstIdSource ? secondAccount : firstAccount;
+
+            log.info("sourceAccount = {}, targetAccount = {}", sourceAccount, targetAccount);
+
+            doDebit(sourceAccount, request);
+            doCredit(targetAccount, request);
         } catch (EntityNotFoundException e) {
-            if (firstAccount == null) {
-                throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
-            }
-            throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
-        }
-
-        log.info("Lock Acquired. Ordered Locking: firstAccount = {}, secondAccount = {}", firstAccount, secondAccount);
-
-        if (request.getSourceAccount().equals(firstId)) {
-            doDebit(firstAccount, request);
-            doCredit(secondAccount, request);
-        } else {
-            doDebit(secondAccount, request);
-            doCredit(firstAccount, request);
+            throw new AccountException(ResultCodeEnum.ACCOUNT_NOT_FOUND);
         }
     }
 

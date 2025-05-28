@@ -1,6 +1,6 @@
 # Fund Transfer Demo
 
-## Solves concurrency issue of updating specific rows in database via pessimistic locking with retry mechanism
+## Solves concurrency issue of updating specific rows in database via ordered pessimistic locking with retry mechanism
 
 ## Technologies
 - Java 21
@@ -33,9 +33,14 @@
 - Start/Rerun Application
 
 ## Start Application
-- Run ```mvn clean install```
-- Default port set to 8080 (Change port if needed)
-- Run FundTransferApplication (SpringBootApplication)
+- First, clone project ```git clone https://github.com/tansantosiii/fund-transfer-demo.git```
+- Default port is set to 8080 (Change in ```application.properties``` if needed)
+- Open or navigate to project folder
+- Execute ```mvn clean install``` to download dependencies
+- Execute ```mvn spring-boot:run``` to run the application
+
+## Unit Test 
+- Execute ```mvn test```
 
 ---
 
