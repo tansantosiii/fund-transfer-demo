@@ -49,8 +49,7 @@ public class FundTransferServiceImpl implements FundTransferService {
         }
 
         try {
-            doDebit(request);
-            doCredit(request);
+            doTransfer(request);
         } catch (AccountException | FundTransferException e) {
             return apiResponseAndLog(request, e.getResultCodeEnum());
         } catch (Exception e) {
@@ -61,14 +60,40 @@ public class FundTransferServiceImpl implements FundTransferService {
         return apiResponseAndLog(request, ResultCodeEnum.SUCCESS);
     }
 
-    // Add money to target account
-    private void doCredit(FundTransferRequest request) throws Exception {
-        log.info("doCredit -> Updating target account balance...");
+    public void doTransfer(FundTransferRequest request) {
+        // Ordered locking to prevent deadlocks
+        Long firstId = Math.min(request.getSourceAccount(), request.getTargetAccount());
+        Long secondId = Math.max(request.getSourceAccount(), request.getTargetAccount());
+
+        Account firstAccount = null;
+        Account secondAccount = null;
 
         try {
-            Account targetAccount = accountService.findByIdAndLock(request.getTargetAccount());
-            log.info("Target Account Find By ID and Lock Success");
+            firstAccount = accountService.findByIdAndLock(firstId);
+            secondAccount = accountService.findByIdAndLock(secondId);
+        } catch (EntityNotFoundException e) {
+            if (firstAccount == null) {
+                throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
+            }
+            throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
+        }
 
+        log.info("Lock Acquired. Ordered Locking: firstAccount = {}, secondAccount = {}", firstAccount, secondAccount);
+
+        if (request.getSourceAccount().equals(firstId)) {
+            doDebit(firstAccount, request);
+            doCredit(secondAccount, request);
+        } else {
+            doDebit(secondAccount, request);
+            doCredit(firstAccount, request);
+        }
+    }
+
+    // Add money to target account
+    private void doCredit(Account targetAccount, FundTransferRequest request) {
+        log.info("doCredit -> Updating target account balance... {}", targetAccount);
+
+        try {
             BigDecimal convertedAmount = request.getAmount();
 
             if (!request.getCurrencyCodeEnum().equals(targetAccount.getCurrencyCode())) {
@@ -82,21 +107,16 @@ public class FundTransferServiceImpl implements FundTransferService {
 
             // Save Target Account
             accountService.save(targetAccount);
-        } catch (EntityNotFoundException e) {
-            throw new AccountException(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND);
         } catch (CurrencyConversionException | DatabaseException e) {
             throw new FundTransferException(e.getResultCodeEnum());
         }
     }
 
     // Deduct money from source account
-    private void doDebit(FundTransferRequest request) throws Exception {
-        log.info("doDebit -> Updating source account balance...");
+    private void doDebit(Account sourceAccount, FundTransferRequest request) {
+        log.info("doDebit -> Updating source account balance... {}", sourceAccount);
 
         try {
-            Account sourceAccount = accountService.findByIdAndLock(request.getSourceAccount());
-            log.info("Source Account Find By ID and Lock Success");
-
             BigDecimal convertedAmount = request.getAmount();
 
             if (!request.getCurrencyCodeEnum().equals(sourceAccount.getCurrencyCode())) {
@@ -118,8 +138,6 @@ public class FundTransferServiceImpl implements FundTransferService {
 
             // Save Source Account
             accountService.save(sourceAccount);
-        } catch (EntityNotFoundException e) {
-            throw new AccountException(ResultCodeEnum.SOURCE_ACCOUNT_NOT_FOUND);
         } catch (CurrencyConversionException | DatabaseException e) {
             throw new FundTransferException(e.getResultCodeEnum());
         }

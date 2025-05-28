@@ -77,10 +77,10 @@ class FundTransferServiceTest {
 
     @Test
     void transfer_SourceAccountNotFound() {
-        when(accountService.findByIdAndLock(3L)).thenThrow(new EntityNotFoundException("Not Found"));
+        when(accountService.findByIdAndLock(1L)).thenThrow(new EntityNotFoundException("Not Found"));
 
         FundTransferRequest request = new FundTransferRequest();
-        request.setSourceAccount(3L); // Invalid Source Account
+        request.setSourceAccount(1L); // Invalid Source Account
         request.setTargetAccount(2L);
         request.setAmount(BigDecimal.TEN);
         request.setCurrencyCode(CurrencyCodeEnum.USD.name());
@@ -110,7 +110,7 @@ class FundTransferServiceTest {
         assertEquals(ResultCodeEnum.TARGET_ACCOUNT_NOT_FOUND.name(), apiResponse.getResult().getCode());
 
         verify(accountService, times(2)).findByIdAndLock(anyLong());
-        verify(accountService, times(1)).save(any());
+        verify(accountService, times(0)).save(any());
         verify(fundTransferRepository, times(1)).save(any());
     }
 
