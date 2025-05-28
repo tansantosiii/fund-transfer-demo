@@ -17,11 +17,11 @@ public final class CurrencyRateUtil {
         try {
             if (currencyCodeEnum.equals(CurrencyCodeEnum.AUD)) {
                 // Convert AUD to USD
-                return amount.multiply(USD).setScale(2, RoundingMode.HALF_UP);
+                return amount.multiply(USD).setScale(2, RoundingMode.HALF_EVEN);
             }
 
             // Convert USD to AUD
-            return amount.divide(USD, 2, RoundingMode.HALF_UP);
+            return amount.divide(USD, 2, RoundingMode.HALF_EVEN);
         } catch (NumberFormatException e) {
             throw new CurrencyConversionException(ResultCodeEnum.CURRENCY_COVERT_FAILED);
         }

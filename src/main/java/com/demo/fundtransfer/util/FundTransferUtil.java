@@ -25,7 +25,7 @@ public final class FundTransferUtil {
 
     public static BigDecimal addTransactionFee(BigDecimal amount) {
         BigDecimal transFeeAmount = amount.multiply(TRANSACTION_FEE);
-        return amount.add(transFeeAmount).setScale(2, RoundingMode.HALF_UP);
+        return amount.add(transFeeAmount).setScale(2, RoundingMode.HALF_EVEN);
     }
 
 }

@@ -64,7 +64,7 @@ public class FundTransferServiceImpl implements FundTransferService {
     public void doTransfer(FundTransferRequest request) {
         log.info("doTransfer -> sourceAccountId = {}, targetAccountId = {}", request.getSourceAccount(), request.getTargetAccount());
 
-        // Ordered locking to prevent deadlocks
+        // Ordered locking to prevent deadlocks during race conditions
         Long firstId = Math.min(request.getSourceAccount(), request.getTargetAccount());
         Long secondId = Math.max(request.getSourceAccount(), request.getTargetAccount());
 
