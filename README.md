@@ -29,7 +29,7 @@
 - Use default username (sa); password=*see application properties -> spring.datasource.password*
 
 ### Data Cleanup
-- Enable jpa drop in application.properties ```spring.jpa.hibernate.ddl-auto=drop```
+- Enable jpa drop in application.properties ```spring.jpa.hibernate.ddl-auto=create-drop```
 - Start/Rerun Application
 
 ## Start Application
