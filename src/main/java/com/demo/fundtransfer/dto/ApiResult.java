@@ -2,8 +2,10 @@ package com.demo.fundtransfer.dto;
 
 import com.demo.fundtransfer.enums.ResultCodeEnum;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class ApiResult {
 
     private String code;

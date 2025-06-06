@@ -2,6 +2,7 @@ package com.demo.fundtransfer.dto;
 
 import com.demo.fundtransfer.enums.CurrencyCodeEnum;
 import com.demo.fundtransfer.validator.MinTransferAmount;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +27,7 @@ public class FundTransferRequest {
     @NotBlank(message = "currencyCode must not be blank")
     private String currencyCode;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public CurrencyCodeEnum getCurrencyCodeEnum() {
         return CurrencyCodeEnum.valueOf(currencyCode.toUpperCase());
     }

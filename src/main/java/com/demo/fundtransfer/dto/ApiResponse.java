@@ -1,9 +1,11 @@
 package com.demo.fundtransfer.dto;
 
 import com.demo.fundtransfer.enums.ResultCodeEnum;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class ApiResponse<T> {
 
     private T data;
